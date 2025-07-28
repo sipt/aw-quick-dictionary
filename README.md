@@ -9,6 +9,7 @@ Quick Dictionary is an Alfred Workflow for quickly querying dictionaries. It is 
   - [x] 牛津英汉汉英词典
   <details>
     <summary>TODO</summary>
+    
     - [ ] Apple Dictionary
     - [ ] Arkadaş Türkçe Sözlük
     - [ ] Dicionário de Português licenciado para Oxford University Press

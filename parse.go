@@ -48,7 +48,11 @@ var phDialectMap = map[string]string{
 
 // parsePronunciation 解析发音信息
 func parsePronunciation(entry *goquery.Selection, md *strings.Builder) {
-	entry.Find(".prx").Each(func(i int, prx *goquery.Selection) {
+	hwgNode := entry.Find(".hwg")
+	if hwgNode.Length() <= 0 {
+		return
+	}
+	hwgNode.Find(".prx").Each(func(i int, prx *goquery.Selection) {
 		dialect := prx.AttrOr("dialect", "")
 		pronunciation := prx.Find(".ph").Text()
 
@@ -58,9 +62,15 @@ func parsePronunciation(entry *goquery.Selection, md *strings.Builder) {
 	})
 
 	// 如果有发音信息，添加换行
-	if entry.Find(".prx").Length() > 0 {
+	if hwgNode.Find(".prx").Length() > 0 {
 		md.WriteString("\n\n")
+		return
 	}
+
+	hwgNode.Find(".pr").Each(func(i int, prx *goquery.Selection) {
+		pronunciation := prx.ChildrenFiltered(".ph").Text()
+		md.WriteString(fmt.Sprintf("`%s`\n\n", strings.TrimSpace(pronunciation)))
+	})
 }
 
 // parseGrammarBlocks 解析语法块（词性分类）
@@ -82,15 +92,18 @@ func parseGrammarBlocks(entry *goquery.Selection, md *strings.Builder) {
 func parseSemanticBlocks(gramb *goquery.Selection, md *strings.Builder) {
 	gramb.Find(".semb").Each(func(i int, semb *goquery.Selection) {
 		// 获取释义编号
-		// senseNum := semb.Find(".sn.ty_label").Text()
-		senseNumNode := semb.Children().First()
+		senseNum := semb.ChildrenFiltered(".tg_semb").Text()
 
 		// 获取翻译
-		translation := senseNumNode.Next().Text()
+		translation := semb.ChildrenFiltered(".trg").Text()
+
+		if translation == "" {
+			translation = semb.ChildrenFiltered(".trgg").Text()
+		}
 
 		// 写入释义
-		if senseNumNode.Text() != "" && translation != "" {
-			md.WriteString(fmt.Sprintf("###### %s %s", senseNumNode.Text(), translation))
+		if senseNum != "" || translation != "" {
+			md.WriteString(fmt.Sprintf("###### %s %s", senseNum, translation))
 			md.WriteString("\n\n")
 		}
 

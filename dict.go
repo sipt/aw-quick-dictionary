@@ -174,6 +174,7 @@ void free_dict_results(DictResults *results) {
 */
 import "C"
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -315,7 +316,6 @@ func getDictNames(filter string) {
 		if length == 0 {
 			wf.NewItem("No dictionaries found").Valid(false)
 		}
-		return
 	})
 	wf.SendFeedback()
 }
@@ -365,8 +365,9 @@ func queryWord(word string) {
 		}
 
 		fallback := ""
+		response := bytes.NewBufferString("")
 		for _, result := range results {
-			resultWord, mdContent, err := parseHtmlToMd(result)
+			_, mdContent, err := parseHtmlToMd(result)
 			if err != nil {
 				dictResult.Response = fmt.Sprintf("Error: %v\n", err)
 				continue
@@ -374,13 +375,16 @@ func queryWord(word string) {
 			if fallback == "" {
 				fallback = mdContent
 			}
-			if resultWord == word {
-				dictResult.Response = mdContent
-				break
+
+			if response.Len() > 0 {
+				response.WriteString("\n\n---\n\n")
 			}
+			response.WriteString(mdContent)
 		}
-		if dictResult.Response == "" {
+		if response.Len() == 0 {
 			dictResult.Response = fallback
+		} else {
+			dictResult.Response = response.String()
 		}
 	})
 }

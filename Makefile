@@ -15,7 +15,7 @@ TARGETS = dict
 all: $(TARGETS)
 
 # Go程序（使用cgo）
-build:
+build: dict.go parse.go dict_service.h
 	CGO_ENABLED=1 $(GO) build -o build/dict .
 
 # 清理
